@@ -1,0 +1,106 @@
+"use client";
+
+import { SectionAnchor, images, navigation } from "@/constants";
+import { cn } from "@/lib/utils";
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import Button from "../atoms/button";
+import { HamburgerMenu } from "../design/navbar";
+import MenuSvg from "../svg/menu-svg";
+
+type Props = {};
+
+const Navbar = (props: Props) => {
+  const [hash, setHash] = useState<SectionAnchor>(SectionAnchor.Hero);
+  const [openNavigation, setOpenNavigation] = useState<boolean>(false);
+
+  useEffect(() => {
+    const dynamicNavbarHighlight = () => {
+      const sections = document.querySelectorAll("section[id]");
+
+      sections.forEach((current) => {
+        if (current === null) return;
+
+        const sectionId = current.getAttribute("id");
+        // @ts-ignore
+        const sectionHeight = current.offsetHeight;
+        const sectionTop = current.getBoundingClientRect().top - sectionHeight * 0.2;
+
+        const anchor = `#${sectionId}` as SectionAnchor;
+
+        if (sectionTop < 0 && sectionTop + sectionHeight > 0 && hash !== anchor) {
+          setHash(anchor);
+        }
+      });
+    };
+
+    window.addEventListener("scroll", dynamicNavbarHighlight);
+
+    return () => window.removeEventListener("scroll", dynamicNavbarHighlight);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const toggleNavigation = () => setOpenNavigation(!openNavigation);
+  const handleClick = () => {
+    if (!openNavigation) return;
+
+    setOpenNavigation(false);
+  };
+
+  return (
+    <div
+      className={cn(
+        "fixed left-0 top-0 z-50 w-full border-b border-n-6 lg:bg-n-8/90 lg:backdrop-blur-sm",
+        openNavigation ? "bg-n-8" : "bg-n-8/90 backdrop-blur-sm"
+      )}
+    >
+      <div className="flex items-center px-5 max-lg:py-4 lg:px-7.5 xl:px-10">
+        <Link href={SectionAnchor.Hero} className="block w-48 xl:mr-8">
+          <Image src={images.apexcryptoLogo} alt="ApexCrypto" width={40} height={40} />
+        </Link>
+
+        <nav
+          className={cn(
+            "fixed inset-x-0 bottom-0 top-20 hidden bg-n-8 lg:static lg:mx-auto lg:flex lg:bg-transparent",
+            openNavigation ? "flex" : "hidden"
+          )}
+        >
+          <div className="relative z-2 m-auto flex flex-col items-center justify-center lg:flex-row">
+            {navigation.map((item) => (
+              <Link
+                key={item.id}
+                href={item.url}
+                onClick={handleClick}
+                className={cn(
+                  "relative block px-6 py-6 font-code text-2xl uppercase text-n-1 transition-colors hover:text-color-1 md:py-8 lg:-mr-0.25 lg:text-[16px] lg:font-semibold lg:leading-5 lg:hover:text-n-1 xl:px-12",
+                  item.onlyMobile && "lg:hidden",
+                  item.url === hash ? "z-2 lg:text-n-1" : "lg:text-n-1/50"
+                )}
+              >
+                {item.title}
+              </Link>
+            ))}
+          </div>
+          <HamburgerMenu />
+        </nav>
+
+        <Link
+          href={SectionAnchor.Signup}
+          className="button mr-8 hidden text-n-1/50 transition-colors hover:text-n-1 lg:block"
+        >
+          New account
+        </Link>
+        <Button className="hidden lg:flex" href={SectionAnchor.Login}>
+          Sign in
+        </Button>
+
+        <Button className="ml-auto lg:hidden" px="px-3" onClick={toggleNavigation}>
+          <MenuSvg openNavigation={openNavigation} />
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+export default Navbar;
